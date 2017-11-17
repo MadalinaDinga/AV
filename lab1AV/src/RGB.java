@@ -1,43 +1,47 @@
 public class RGB {
-    private double red;
-    private double green;
-    private double blue;
+    //COLOR SPACE
+    //red
+    private double r;
+    //green
+    private double g;
+    //blue
+    private double b;
 
     public RGB() {
     }
 
-    public RGB(double red, double green, double blue) {
-        this.red = red;
-        this.green = green;
-        this.blue = blue;
+    public RGB(double r, double g, double b) {
+        this.r = r;
+        this.g = g;
+        this.b = b;
     }
 
-    public double getRed() {
-        return red;
+    public double getR() {
+        return r;
     }
 
-    public void setRed(double red) {
-        this.red = red;
+    public void setR(double r) {
+        this.r = r;
     }
 
-    public double getGreen() {
-        return green;
+    public double getG() {
+        return g;
     }
 
-    public void setGreen(double green) {
-        this.green = green;
+    public void setG(double g) {
+        this.g = g;
     }
 
-    public double getBlue() {
-        return blue;
+    public double getB() {
+        return b;
     }
 
-    public void setBlue(double blue) {
-        this.blue = blue;
+    public void setB(double b) {
+        this.b = b;
     }
 
     @Override
     public String toString() {
-        return "("+red+", "+green+", "+blue+")";
+        return "("+ r +", "+ g +", "+ b +")";
     }
 }

@@ -1,4 +1,5 @@
 public class YUVImage {
+    // position in the image
     private int height;
     private int width;
     private YUV[][] pixels;

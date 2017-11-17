@@ -3,58 +3,94 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Main {
-    public static void main(String[] args) {
+    /**
+     * Main idea:
+     *  1. the first phase of the video encoder: dividing the image into blocks of 8x8 pixels
+     *  2. the last phase of the video decoder: composing the image from a set of 8x8 pixels blocks
+     */
+    public static void main(String[] args) throws InterruptedException {
+        //PHASE 1 - dividing the image into blocks of 8x8 pixels
         List<Block> blocks = new ArrayList<>();
 
-        RGBImage rgbImage = readRgbImage();
+        // read the PPM image( RGB)
+        RGBImage rgbImage = readPPMImage();
 
-        YUVImage yuvImage = RgbToYuv.convert(rgbImage);
+        // FormatConversion each pixel value from RGB to YUV
+        YUVImage yuvImage = RGBtoYUV(rgbImage);
 
-        Block[] yBlocks = BlockUtils.getYBlocks(yuvImage);
+        //BLOCK SPLITTING
+        // matrix for Y components - blocks of 8x8 values
+        // each block:  8x8=64 values/bytes from the block, the type of block (Y) and the position of the block in the image
+        Block[] yBlocks = BuildBlocks.getYBlocks(yuvImage);
 
-        Block[] uBlocks = BlockUtils.getUBlocks(yuvImage);
+        // matrix for U components
+        // each block: 4x4=16 values/bytes from the block, type(U) and the position in the image
+        Block[] uBlocks = BuildBlocks.getUBlocks(yuvImage);
 
-        Block[] vBlocks = BlockUtils.getVlocks(yuvImage);
+        // matrix for V components
+        Block[] vBlocks = BuildBlocks.getVBlocks(yuvImage);
 
+        System.out.println("First Y block:");
         showBlocks(yBlocks);
+
+        System.out.println("First U block:");
+        Thread.sleep(5000);
         showBlocks(uBlocks);
+
+        System.out.println("First V block:");
+        Thread.sleep(2000);
         showBlocks(vBlocks);
 
-        YUVImage decodedYuvImage = BlockUtils.getYuvImage(yBlocks,uBlocks,vBlocks);
+        //PHASE 2 - composing the image from a set of 8x8 pixels blocks
+        YUVImage decodedYuvImage = BuildBlocks.getYUVImage(yBlocks,uBlocks,vBlocks);
 
-        RGBImage decodedRGBImage = RgbToYuv.convertToRGB(decodedYuvImage);
+        RGBImage decodedRGBImage = YUVtoRGB(decodedYuvImage);
 
         createPPM(decodedRGBImage);
 
     }
 
-    private static void showBlocks(Block[] blocks){
+    private static void showBlocksMatrix(Block[] blocks, int k){
         for(Block block: blocks){
-            System.out.print(block+" ");
+            for (int i=0; i<k; i++) {
+                System.out.print(block + " ");
+            }
+            System.out.println();
         }
-        System.out.println();
+    }
+
+    private static void showBlocks(Block[] blocks){
+        /*for(Block block: blocks){
+                System.out.print(block + " ");
+            }*/
+        System.out.println(blocks[0]);
     }
 
     private static void createPPM(RGBImage rgbImage){
-        File file = new File("result.ppm");
+        File file = new File("compressed.ppm");
         try {
+            //creates a new empty file if a file with this name does not yet exist
             file.createNewFile();
             FileOutputStream outputStream = new FileOutputStream(file,false);
 
+            //the HEADER P3, the height, the width( resolution) into a sequence of bytes, storing the result into a new byte array.
+            //the format: P3
             outputStream.write("P3\n".getBytes());
-            outputStream.write("#Some comment\n".getBytes());
+            //the resolution
             outputStream.write((rgbImage.getHeight()+" "+rgbImage.getWidth()+"\n").getBytes());
+            //the maximum value of a byte component
             outputStream.write((255+"\n").getBytes());
 
+            //the data bytes( 1 pixel = 3 bytes- red, green, blue), storing the result into a new byte array.
             for(int i = 0; i < rgbImage.getHeight(); i++ ){
                 for(int j = 0; j < rgbImage.getWidth(); j++){
-                    int red = (int) rgbImage.getPixels()[i][j].getRed();
-                    int green = (int) rgbImage.getPixels()[i][j].getGreen();
-                    int blue = (int) rgbImage.getPixels()[i][j].getBlue();
+                    int r = (int) rgbImage.getPixels()[i][j].getR();
+                    int g = (int) rgbImage.getPixels()[i][j].getG();
+                    int b = (int) rgbImage.getPixels()[i][j].getB();
 
-                    outputStream.write((red+"\n").getBytes());
-                    outputStream.write((green+"\n").getBytes());
-                    outputStream.write((blue+"\n").getBytes());
+                    outputStream.write((r+"\n").getBytes());
+                    outputStream.write((g+"\n").getBytes());
+                    outputStream.write((b+"\n").getBytes());
                 }
             }
 
@@ -63,26 +99,35 @@ public class Main {
         }
     }
 
-    private static RGBImage readRgbImage() {
+    /**
+     * This file format contains a small header of 3 lines (or more if there are comments - line which start with '#')
+     * format - P3
+     * resolution( width, height) - 600 x 800
+     * maximum value of a byte component - 255
+     */
+    private static RGBImage readPPMImage() {
         try {
             BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream("nt-P3.ppm")));
-            System.out.println(br.readLine());
-            System.out.println(br.readLine());
-            String dimenssions = br.readLine();
-            String[] dims = dimenssions.split(" ");
-            System.out.println(br.readLine());
+            //HEADER
+            System.out.println(br.readLine());  //P3
+            System.out.println(br.readLine());  // #comment
 
-            Integer width = Integer.valueOf(dims[1]);
+            String dim = br.readLine();     //600 800
+            String[] dims = dim.split(" ");
             Integer height = Integer.valueOf(dims[0]);
+            Integer width = Integer.valueOf(dims[1]);
+            System.out.println(width + " " + height);
+
+            System.out.println(br.readLine());  //255
 
             Integer r, g, b;
 
-            System.out.println(width + " " + height);
             RGBImage rgbImage = new RGBImage();
             rgbImage.setHeight(height);
             rgbImage.setWidth(width);
             rgbImage.setPixels(new RGB[height][width]);
 
+            // each pixel gets a red, a green and a blue
             for (int i = 0; i < height; i++)
                 for (int j = 0; j < width; j++) {
                     try {
@@ -100,6 +145,73 @@ public class Main {
         } catch (Exception e) {
             return null;
         }
+    }
 
+
+    /**
+     * Y = 0.299*R + 0.587*G + 0.114*B
+     * U = 128 – 0.1687*R – 0.3312*G + 0.5*B
+     * V = 128 + 0.5*R – 0.4186*G – 0.0813*B
+     * then the image is pixel padded at right and bottom so that width and height are multiple of 8 (16) bits
+     * @param rgbImage
+     * @return
+     */
+    private static YUVImage RGBtoYUV(RGBImage rgbImage) {
+        YUVImage yuvImage = new YUVImage();
+        yuvImage.setHeight(rgbImage.getHeight());
+        yuvImage.setWidth(rgbImage.getWidth());
+        yuvImage.setPixels(new YUV[yuvImage.getHeight()][yuvImage.getWidth()]);
+
+        for (int i = 0; i < rgbImage.getHeight(); i++) {
+            for (int j = 0; j < rgbImage.getWidth(); j++) {
+                YUV yuv = new YUV();
+                double y,u,v;
+                /*y =0.299 * rgbImage.getPixels()[i][j].getR() + 0.587 * rgbImage.getPixels()[i][j].getG() + 0.114
+                        * rgbImage.getPixels()[i][j].getB();
+                u = (-0.1687) * rgbImage.getPixels()[i][j].getR() + (-0.3312) * rgbImage.getPixels()[i][j].getG()
+                        + 0.5 * rgbImage.getPixels()[i][j].getB() + 128.0;
+                v = 128.0 + 0.5 * rgbImage.getPixels()[i][j].getR() + (-0.4186) * rgbImage.getPixels()[i][j].getG()
+                        + (-0.0813) * rgbImage.getPixels()[i][j].getG();*/
+                // https://www.vocal.com/video/rgb-and-yuv-color-space-conversion/
+                y = (0.257 * rgbImage.getPixels()[i][j].getR()) + (0.504 * rgbImage.getPixels()[i][j].getG()) +
+                        (0.098 * rgbImage.getPixels()[i][j].getB()) + 16;
+                u = 128+(-(0.148 *  rgbImage.getPixels()[i][j].getR())) - (0.291 *  rgbImage.getPixels()[i][j].getG()) +
+                        (0.439 *  rgbImage.getPixels()[i][j].getB());
+                v = 128+(0.439 * rgbImage.getPixels()[i][j].getR()) - (0.368 * rgbImage.getPixels()[i][j].getG()) -
+                        (0.071 * rgbImage.getPixels()[i][j].getB());
+                yuv.setY(y);
+                yuv.setU(u);
+                yuv.setV(v);
+
+                yuvImage.getPixels()[i][j] = yuv;
+            }
+        }
+        return yuvImage;
+    }
+
+    private static RGBImage YUVtoRGB(YUVImage yuvImage) {
+        RGBImage rgbImage = new RGBImage();
+        rgbImage.setHeight(yuvImage.getHeight());
+        rgbImage.setWidth(yuvImage.getWidth());
+        rgbImage.setPixels(new RGB[rgbImage.getHeight()][rgbImage.getWidth()]);
+
+        for (int i = 0; i < rgbImage.getHeight(); i++) {
+            for (int j = 0; j < rgbImage.getWidth(); j++) {
+                RGB rgb = new RGB();
+                double red,green,blue;
+
+                //https://www.vocal.com/video/rgb-and-yuv-color-space-conversion/
+                red =1.164 * (yuvImage.getPixels()[i][j].getY() - 16.0) + 1.596 * (yuvImage.getPixels()[i][j].getV() - 128.0);
+                green =1.164 * (yuvImage.getPixels()[i][j].getY() - 16) - 0.813 *
+                        (yuvImage.getPixels()[i][j].getV() - 128.0) - 0.391 * (yuvImage.getPixels()[i][j].getU() - 128);
+                blue = 1.164 * (yuvImage.getPixels()[i][j].getY() - 16.0) + 2.018 * (yuvImage.getPixels()[i][j].getU() - 128.0);
+
+                rgb.setR(red);
+                rgb.setG(green);
+                rgb.setB(blue);
+                rgbImage.getPixels()[i][j] = rgb;
+            }
+        }
+        return rgbImage;
     }
 }

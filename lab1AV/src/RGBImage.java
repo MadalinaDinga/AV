@@ -1,4 +1,5 @@
 public class RGBImage {
+    //resolution
     private int height;
     private int width;
     private RGB[][] pixels;

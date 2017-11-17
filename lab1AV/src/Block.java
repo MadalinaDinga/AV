@@ -1,19 +1,26 @@
-import java.util.Arrays;
+import static java.lang.StrictMath.round;
 
 public class Block {
+    /**
+     * 64 values/bytes for Y components.
+     * <br/> 16 values/ bytes for U/V components.
+     */
     private Double[][] values;
-    private Integer x;
-    private Integer y;
+    /**
+     * The type of the block.
+     */
     private String type;
+    /**
+     * The position of the block(posX-axis).
+     */
+    private Integer posX;
+    /**
+     * The position of the block(posY-axis).
+     */
+    private Integer posY;
+
 
     public Block() {
-    }
-
-    public Block(Double[][] values, Integer x, Integer y, String type) {
-        this.values = values;
-        this.x = x;
-        this.y = y;
-        this.type = type;
     }
 
     public Double[][] getValues() {
@@ -24,20 +31,20 @@ public class Block {
         this.values = values;
     }
 
-    public Integer getX() {
-        return x;
+    public Integer getPosX() {
+        return posX;
     }
 
-    public void setX(Integer x) {
-        this.x = x;
+    public void setPosX(Integer posX) {
+        this.posX = posX;
     }
 
-    public Integer getY() {
-        return y;
+    public Integer getPosY() {
+        return posY;
     }
 
-    public void setY(Integer y) {
-        this.y = y;
+    public void setPosY(Integer posY) {
+        this.posY = posY;
     }
 
     public String getType() {
@@ -51,15 +58,16 @@ public class Block {
     @Override
     public String toString() {
         String matrix="";
-        for(Double[] rows :values){
-            for(Double elem : rows){
-                matrix+=elem+";";
+        for(Double[] i :values){
+            for(Double c : i){
+                matrix+=round(c)+" ";
             }
+            matrix+="\n";
         }
         return "Block{" +
-                "values={"+"} ,"+
-                ", x=" + x +
-                ", y=" + y +
+                "values={\n"+ matrix +"\n} ,"+
+                ", posX=" + posX +
+                ", posY=" + posY +
                 ", type='" + type + '\'' +
                 '}';
     }

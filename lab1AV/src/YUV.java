@@ -1,15 +1,13 @@
 public class YUV {
+    //COLOR SPACE
+    //luminance
     private double y;
+    //blue chrominance
     private double u;
+    //red chrominance
     private double v;
 
     public YUV() {
-    }
-
-    public YUV(double y, double u, double v) {
-        this.y = y;
-        this.u = u;
-        this.v = v;
     }
 
     public double getY() {
