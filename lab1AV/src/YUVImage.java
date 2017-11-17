@@ -2,12 +2,12 @@ public class YUVImage {
     // position in the image
     private int height;
     private int width;
-    private YUV[][] pixels;
+    private YUVPixel[][] pixels;
 
     public YUVImage() {
     }
 
-    public YUVImage(int height, int width, YUV[][] pixels) {
+    public YUVImage(int height, int width, YUVPixel[][] pixels) {
         this.height = height;
         this.width = width;
         this.pixels = pixels;
@@ -29,11 +29,11 @@ public class YUVImage {
         this.width = width;
     }
 
-    public YUV[][] getPixels() {
+    public YUVPixel[][] getPixels() {
         return pixels;
     }
 
-    public void setPixels(YUV[][] pixels) {
+    public void setPixels(YUVPixel[][] pixels) {
         this.pixels = pixels;
     }
 }

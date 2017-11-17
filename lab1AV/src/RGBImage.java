@@ -2,12 +2,12 @@ public class RGBImage {
     //resolution
     private int height;
     private int width;
-    private RGB[][] pixels;
+    private RGBPixel[][] pixels;
 
     public RGBImage() {
     }
 
-    public RGBImage(int height, int width, RGB[][] pixels) {
+    public RGBImage(int height, int width, RGBPixel[][] pixels) {
         this.height = height;
         this.width = width;
         this.pixels = pixels;
@@ -29,11 +29,11 @@ public class RGBImage {
         this.width = width;
     }
 
-    public RGB[][] getPixels() {
+    public RGBPixel[][] getPixels() {
         return pixels;
     }
 
-    public void setPixels(RGB[][] pixels) {
+    public void setPixels(RGBPixel[][] pixels) {
         this.pixels = pixels;
     }
 }
